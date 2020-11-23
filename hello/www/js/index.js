@@ -26,26 +26,35 @@ function onDeviceReady() {
 
 	$(document).ready(function(){
 
-		alert("hello world");
-
 		console.log('Running cordova-' + cordova.platformId + '@' + cordova.version);
-		document.getElementById('deviceready').classList.add('ready');
+
+		$(".head-nav h2").html("Inicio");
+
+		$(".gps").on("click", function(){
+
+			$(".head-nav h2").html("Geolocalización.");
+
+			$(".icon").removeClass("hidden");
+			$(".gps").addClass("hidden");
+			$(".dterm").addClass("hidden");
+			$(".save").addClass("hidden");
+			$(".getData").removeClass("hidden");
 
 		var onSuccess = function(position) {
 
-			alert('Latitude: '          + position.coords.latitude          + '\n' +
+			/*alert('Latitude: '          + position.coords.latitude          + '\n' +
 				'Longitude: '         + position.coords.longitude         + '\n' +
 				'Altitude: '          + position.coords.altitude          + '\n' +
 				'Accuracy: '          + position.coords.accuracy          + '\n' +
 				'Altitude Accuracy: ' + position.coords.altitudeAccuracy  + '\n' +
 				'Heading: '           + position.coords.heading           + '\n' +
 				'Speed: '             + position.coords.speed             + '\n' +
-				'Timestamp: '         + position.timestamp                + '\n');
+				'Timestamp: '         + position.timestamp                + '\n');*/
 
 			let theLat = position.coords.latitude;
 			let theLong = position.coords.longitude;
 
-			sendData(theLat, theLong);
+			$(".getData").html("Your position is: Lat <label>"+theLat+"</label>, Long <label>"+theLong+"</label>.");
 
 		};
 
@@ -60,24 +69,64 @@ function onDeviceReady() {
 
 		navigator.geolocation.getCurrentPosition(onSuccess, onError);
 
+	}); //Get location function ends
+
+	$(".icon").on("click", function(){
+		$(".head-nav h2").html("Inicio");
+		$(".gps").removeClass("hidden");
+		$(".save").removeClass("hidden");
+		$(".dterm").removeClass("hidden");
+		$(".getData").empty();//.addClass("hidden");
+		$(".icon").addClass("hidden");
+	});
+
+	$(".dterm").on("click", function(){
+		$(".head-nav h2").html("Datos del Terminal.");
+		$(".icon").removeClass("hidden");
+		$(".gps").addClass("hidden");
+		$(".dterm").addClass("hidden");
+		$(".save").addClass("hidden");
+		$(".getData").removeClass("hidden");
+		$(".getData").html(
+			"S.O. y versión: "+device.platform+" "+device.version+"<br>"+
+			"Modelo: "+device.model+"<br>"+
+			"Fabricante: "+device.manufacturer+"<br>"+
+			"N° de serie: "+device.serial+"<br>"
+			);
+
+
+	});//Get Device info ends
+
+	$(".save").on("click", function(){
+		$(".head-nav h2").html("Save Data.");
+		$(".icon").removeClass("hidden");
+		$(".gps").addClass("hidden");
+		$(".dterm").addClass("hidden");
+		$(".save").addClass("hidden");
+		$(".getData").removeClass("hidden");
+
+		$(".getData").html("Waiting response...");
+
+		$.ajax({
+            type: "POST",
+            url: "http://192.168.100.28/rest/index.php",
+            data: JSON.stringify({latitud:theLat,longitud:theLong}),
+            cache: false,
+            crossDomain: true,
+            dataType: 'JSON',
+            success: function(msg){
+            	$(".getData").empty();
+                $(".getData").html("Saving was: "+msg.status);
+            },
+            error: function(msg){
+            	$(".getData").empty();
+                $(".getData").html("Service is not available "+msg.status);
+
+            }
+        });
+
+	});
+
 	});//Ends document ready jquery
 
 }
-
-
-function sendData(theLat, theLong){
-
-        $.ajax({
-            type: "POST",
-            url: "http://place_here_your_ip_address/rest/index.php",
-            data: JSON.stringify({latitud:theLat,longitud:theLong}),
-            cache: false,
-            dataType: 'JSON',
-            success: function(msg){
-                $('#getResponse').html("<p>The response is:"+msg.status+"</p>");
-            },
-            error: function(msg){
-                $('#getResponse').html("<p>Whops... something bad happened:"+msg.status+"</p>");
-            }
-        });
-    }
